@@ -27,6 +27,7 @@ type Task struct {
 	Weight int
 	Fn     func()
 	Name   string
+	Max    int
 }
 
 type runner struct {
@@ -73,12 +74,12 @@ func (r *runner) spawnGoRoutines(spawnCount int, quit chan bool) {
 			if i%r.hatchRate == 0 {
 				time.Sleep(1 * time.Second)
 			}
-			go func(fn func()) {
+			go func(fn func(), max int) {
 				for {
 					select {
 					case <-quit:
 						return
-					case <-time.After(time.Second * 10):
+					case <-time.After(time.Millisecond * time.Duration(max)):
 						if maxRPSEnabled {
 							token := atomic.AddInt64(&maxRPSThreshold, -1)
 							if token < 0 {
@@ -92,7 +93,7 @@ func (r *runner) spawnGoRoutines(spawnCount int, quit chan bool) {
 						}
 					}
 				}
-			}(task.Fn)
+			}(task.Fn, task.Max)
 		}
 
 	}
