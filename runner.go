@@ -78,7 +78,7 @@ func (r *runner) spawnGoRoutines(spawnCount int, quit chan bool) {
 					select {
 					case <-quit:
 						return
-          case <-time.After(time.Second * 10):
+					case <-time.After(time.Second * 10):
 						if maxRPSEnabled {
 							token := atomic.AddInt64(&maxRPSThreshold, -1)
 							if token < 0 {
