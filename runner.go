@@ -7,6 +7,7 @@ import (
 	"runtime/debug"
 	"sync/atomic"
 	"time"
+	"math/rand"
 )
 
 const (
@@ -28,6 +29,7 @@ type Task struct {
 	Fn     func()
 	Name   string
 	Max    int
+	Min    int
 }
 
 type runner struct {
@@ -74,12 +76,12 @@ func (r *runner) spawnGoRoutines(spawnCount int, quit chan bool) {
 			if i%r.hatchRate == 0 {
 				time.Sleep(1 * time.Second)
 			}
-			go func(fn func(), max int) {
+			go func(fn func(), max int, min int) {
 				for {
 					select {
 					case <-quit:
 						return
-					case <-time.After(time.Millisecond * time.Duration(max)):
+					case <-time.After(time.Millisecond * time.Duration(min+rand.Intn(max-min))):
 						if maxRPSEnabled {
 							token := atomic.AddInt64(&maxRPSThreshold, -1)
 							if token < 0 {
@@ -93,7 +95,7 @@ func (r *runner) spawnGoRoutines(spawnCount int, quit chan bool) {
 						}
 					}
 				}
-			}(task.Fn, task.Max)
+			}(task.Fn, task.Max, task.Min)
 		}
 
 	}
